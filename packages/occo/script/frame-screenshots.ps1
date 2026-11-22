@@ -9,7 +9,7 @@ using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 
 public static class ScreenshotFrame {
-  const int Margin = 64, Padding = 12, Radius = 24, Offset = Margin + Padding;
+  const int Margin = 80, Padding = 10, Radius = 24, Offset = Margin + Padding;
 
   public static void Create(string source, string destination) {
     using (var original = new Bitmap(source))
@@ -17,38 +17,21 @@ public static class ScreenshotFrame {
       framed.SetResolution(original.HorizontalResolution, original.VerticalResolution);
       int width = framed.Width, height = framed.Height;
       int shellWidth = original.Width + 2 * Padding, shellHeight = original.Height + 2 * Padding;
-      using (var graphics = Graphics.FromImage(framed))
-      using (var shadow = Rounded(Margin, Margin + 14, shellWidth, shellHeight))
-      using (var brush = new SolidBrush(Color.FromArgb(46, 0, 0, 0))) {
+      using (var graphics = Graphics.FromImage(framed)) {
         graphics.Clear(Color.Transparent);
-        graphics.FillPath(brush, shadow);
+        Shadow(graphics, width, height, shellWidth, shellHeight, 16, 14, 41);
+        Shadow(graphics, width, height, shellWidth, shellHeight, 4, 3, 31);
       }
-
-      var pixels = Pixels(framed, new Rectangle(0, 0, width, height));
-      var alpha = new byte[width * height];
-      for (int i = 0; i < alpha.Length; i++) alpha[i] = pixels[i * 4 + 3];
-      // Three 12px box-blur passes approximate a Gaussian shadow with a 36px extent.
-      for (int pass = 0; pass < 3; pass++) {
-        alpha = Blur(alpha, width, height, true);
-        alpha = Blur(alpha, width, height, false);
-      }
-      for (int i = 0; i < alpha.Length; i++) {
-        pixels[i * 4] = pixels[i * 4 + 1] = pixels[i * 4 + 2] = 0;
-        pixels[i * 4 + 3] = alpha[i];
-      }
-      var data = framed.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
-      try {
-        for (int row = 0; row < height; row++)
-          Marshal.Copy(pixels, row * width * 4, IntPtr.Add(data.Scan0, row * data.Stride), width * 4);
-      } finally { framed.UnlockBits(data); }
 
       using (var graphics = Graphics.FromImage(framed))
       using (var shell = Rounded(Margin, Margin, shellWidth, shellHeight))
-      using (var fill = new SolidBrush(Color.FromArgb(27, 29, 35)))
-      using (var border = new Pen(Color.FromArgb(166, 63, 66, 75), 2)) {
+      using (var fill = new SolidBrush(Color.FromArgb(21, 24, 29)))
+      using (var border = new Pen(Color.FromArgb(38, 255, 255, 255), 2))
+      using (var inner = new Pen(Color.FromArgb(77, 0, 0, 0), 1)) {
         graphics.SmoothingMode = SmoothingMode.AntiAlias;
         graphics.FillPath(fill, shell);
         graphics.DrawPath(border, shell);
+        graphics.DrawRectangle(inner, Offset - 1, Offset - 1, original.Width + 1, original.Height + 1);
       }
       // Copy pixels directly so image-DPI scaling or interpolation cannot alter the screenshot.
       var sourcePixels = Pixels(original, new Rectangle(0, 0, original.Width, original.Height));
@@ -78,6 +61,11 @@ public static class ScreenshotFrame {
       for (int y = 0; y < framed.Height; y++)
         if (framed.GetPixel(0, y).A != 0 || framed.GetPixel(framed.Width - 1, y).A != 0)
           throw new InvalidOperationException("Shadow reaches the canvas edge.");
+      int bottom = Margin + original.Height + 2 * Padding;
+      int near = framed.GetPixel(framed.Width / 2, bottom + 6).A;
+      int far = framed.GetPixel(framed.Width / 2, bottom + 24).A;
+      if (near <= far || far == 0)
+        throw new InvalidOperationException("Expected a fading two-layer shadow below the frame.");
     }
   }
 
@@ -102,8 +90,35 @@ public static class ScreenshotFrame {
     return pixels;
   }
 
-  static byte[] Blur(byte[] input, int width, int height, bool horizontal) {
-    const int radius = 12, divisor = 2 * radius + 1;
+  static void Shadow(Graphics destination, int width, int height, int shellWidth, int shellHeight, int offset, int radius, int opacity) {
+    using (var shadow = new Bitmap(width, height, PixelFormat.Format32bppArgb)) {
+      using (var graphics = Graphics.FromImage(shadow))
+      using (var shape = Rounded(Margin, Margin + offset, shellWidth, shellHeight))
+      using (var brush = new SolidBrush(Color.FromArgb(opacity, 0, 0, 0))) {
+        graphics.SmoothingMode = SmoothingMode.AntiAlias;
+        graphics.FillPath(brush, shape);
+      }
+      var pixels = Pixels(shadow, new Rectangle(0, 0, width, height));
+      var alpha = new byte[width * height];
+      for (int i = 0; i < alpha.Length; i++) alpha[i] = pixels[i * 4 + 3];
+      // Three separable box-blur passes approximate each soft shadow.
+      for (int pass = 0; pass < 3; pass++) {
+        alpha = Blur(alpha, width, height, true, radius);
+        alpha = Blur(alpha, width, height, false, radius);
+      }
+      for (int i = 0; i < alpha.Length; i++) pixels[i * 4 + 3] = alpha[i];
+      var data = shadow.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
+      try {
+        for (int row = 0; row < height; row++)
+          Marshal.Copy(pixels, row * width * 4, IntPtr.Add(data.Scan0, row * data.Stride), width * 4);
+      } finally { shadow.UnlockBits(data); }
+      // Explicit pixel rectangles prevent the shadow bitmap's default DPI from scaling it.
+      destination.DrawImage(shadow, new Rectangle(0, 0, width, height), 0, 0, width, height, GraphicsUnit.Pixel);
+    }
+  }
+
+  static byte[] Blur(byte[] input, int width, int height, bool horizontal, int radius) {
+    int divisor = 2 * radius + 1;
     var output = new byte[input.Length];
     int length = horizontal ? width : height, lines = horizontal ? height : width;
     int step = horizontal ? 1 : width;

@@ -24,13 +24,11 @@ public static class TerminalCapture {
   [DllImport("user32.dll")] public static extern bool EnumWindows(Callback callback, IntPtr value);
   [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr window);
   [DllImport("user32.dll")] public static extern bool IsWindow(IntPtr window);
-  [DllImport("user32.dll")] public static extern bool IsZoomed(IntPtr window);
   [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern int GetClassName(IntPtr window, StringBuilder text, int length);
   [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern int GetWindowText(IntPtr window, StringBuilder text, int length);
-  [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr window, out Rect rect);
   [DllImport("user32.dll")] public static extern uint GetDpiForWindow(IntPtr window);
-  [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr window, int command);
-  [DllImport("user32.dll")] public static extern bool SetWindowPos(IntPtr window, IntPtr after, int x, int y, int width, int height, uint flags);
+  [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr window, out Rect rect);
+  [DllImport("user32.dll")] public static extern bool PrintWindow(IntPtr window, IntPtr dc, uint flags);
   [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr window);
   [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
   [DllImport("user32.dll")] public static extern bool PostMessage(IntPtr window, uint message, IntPtr w, IntPtr l);
@@ -80,21 +78,18 @@ function Get-TerminalLayout([IntPtr]$Window) {
   [void]$character.MoveEndpointByUnit([System.Windows.Automation.Text.TextPatternRangeEndpoint]::End, [System.Windows.Automation.Text.TextUnit]::Character, 1)
   $cell = $character.GetBoundingRectangles()[0]
   $bounds = $control.Current.BoundingRectangle
-  $rect = New-Object TerminalCapture+Rect
-  [void][TerminalCapture]::GetWindowRect($Window, [ref]$rect)
   return [pscustomobject]@{
     Handle = $Window.ToInt64(); DPI = [TerminalCapture]::GetDpiForWindow($Window)
     Font = $pattern.DocumentRange.GetAttributeValue([System.Windows.Automation.TextPattern]::FontNameAttribute).ToString()
     CellWidth = $cell.Width; CellHeight = $cell.Height
     X = $bounds.X; Y = $bounds.Y; Width = $bounds.Width; Height = $bounds.Height
-    Maximized = [TerminalCapture]::IsZoomed($Window); Window = $rect
   }
 }
 
-function Assert-MatchingLayout($Reference, $Actual) {
+function Assert-MatchingLayout($Expected, $Actual) {
   foreach ($property in @('Width', 'Height', 'DPI', 'Font', 'CellWidth', 'CellHeight')) {
-    if ($Reference.$property -ne $Actual.$property) {
-      throw "Terminal $property differs: expected $($Reference.$property), got $($Actual.$property)."
+    if ($Expected.$property -ne $Actual.$property) {
+      throw "Terminal $property differs: expected $($Expected.$property), got $($Actual.$property)."
     }
   }
 }
@@ -104,10 +99,6 @@ try {
   $stateFile = Join-Path $StateDir 'window.json'
   if ($Action -eq 'launch') {
     $existing = @([TerminalCapture]::Windows())
-    if (-not $existing.Count) { throw 'Open a Windows Terminal PowerShell window at the desired size first.' }
-    $foreground = [TerminalCapture]::GetForegroundWindow()
-    $referenceWindow = if ($foreground -in $existing) { $foreground } else { $existing[0] }
-    $reference = Get-TerminalLayout $referenceWindow
     $token = 'occo README ' + [guid]::NewGuid().ToString('N').Substring(0, 8)
     $launcher = @'
 $ErrorActionPreference = 'Stop'
@@ -131,15 +122,12 @@ exit $LASTEXITCODE
     }
     if ($created.Count -ne 1) { throw 'Could not identify the new demonstration window.' }
     $window = $created[0]
-    @{ Handle = $window.ToInt64(); Token = $token; Reference = $reference } | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $stateFile -Encoding UTF8
-    [void][TerminalCapture]::ShowWindow($window, 9)
-    $rect = $reference.Window
-    [void][TerminalCapture]::SetWindowPos($window, [IntPtr]::Zero, $rect.Left, $rect.Top, $rect.Right - $rect.Left, $rect.Bottom - $rect.Top, 4)
-    if ($reference.Maximized) { [void][TerminalCapture]::ShowWindow($window, 3) }
+    @{ Handle = $window.ToInt64(); Token = $token } | ConvertTo-Json | Set-Content -LiteralPath $stateFile -Encoding UTF8
     [void][TerminalCapture]::SetForegroundWindow($window)
     Start-Sleep -Seconds 2
-    Assert-MatchingLayout $reference (Get-TerminalLayout $window)
-    Write-Output "Native terminal: $($reference.Width)x$($reference.Height), DPI $($reference.DPI), $($reference.Font), cells $($reference.CellWidth)x$($reference.CellHeight)."
+    $capture = Get-TerminalLayout $window
+    @{ Handle = $window.ToInt64(); Token = $token; Capture = $capture } | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $stateFile -Encoding UTF8
+    Write-Output "Default terminal: $($capture.Width)x$($capture.Height), DPI $($capture.DPI), $($capture.Font), cells $($capture.CellWidth)x$($capture.CellHeight)."
     exit 0
   }
 
@@ -158,16 +146,29 @@ exit $LASTEXITCODE
   Start-Sleep -Milliseconds 250
   if ([TerminalCapture]::GetForegroundWindow() -ne $window) { throw 'The demonstration window must be in the foreground.' }
   $actual = Get-TerminalLayout $window
-  Assert-MatchingLayout $state.Reference $actual
+  Assert-MatchingLayout $state.Capture $actual
   if ($Action -eq 'input') {
     [TerminalCapture]::Type([Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($TextBase64)))
     exit 0
   }
-  $bitmap = [Drawing.Bitmap]::new([int]$actual.Width, [int]$actual.Height)
+  $rect = New-Object TerminalCapture+Rect
+  [void][TerminalCapture]::GetWindowRect($window, [ref]$rect)
+  $bitmap = [Drawing.Bitmap]::new($rect.Right - $rect.Left, $rect.Bottom - $rect.Top)
   $graphics = [Drawing.Graphics]::FromImage($bitmap)
   try {
-    $graphics.CopyFromScreen([int]$actual.X, [int]$actual.Y, 0, 0, $bitmap.Size)
-    $bitmap.Save($Output, [Drawing.Imaging.ImageFormat]::Png)
+    $dc = $graphics.GetHdc()
+    try {
+      # PW_RENDERFULLCONTENT captures this window even when its bottom is behind the taskbar.
+      if (-not [TerminalCapture]::PrintWindow($window, $dc, 2)) { throw 'Could not capture the demonstration window.' }
+    } finally { $graphics.ReleaseHdc($dc) }
+    # Keep the complete terminal content area; remove only native window chrome.
+    $content = $bitmap.Clone([Drawing.Rectangle]::new(
+      [int]($actual.X - $rect.Left), [int]($actual.Y - $rect.Top),
+      [int]$actual.Width, [int]$actual.Height), [Drawing.Imaging.PixelFormat]::Format32bppArgb)
+    try {
+      $content.SetResolution($actual.DPI, $actual.DPI)
+      $content.Save($Output, [Drawing.Imaging.ImageFormat]::Png)
+    } finally { $content.Dispose() }
   } finally {
     $graphics.Dispose()
     $bitmap.Dispose()
