@@ -36,7 +36,7 @@ cd packages/occo
 bun run build
 ```
 
-也可以解压 `occo-0.1.0.tgz`，进入其中的 `package` 目录，无需构建。请使用本项目的源码或安装包，不要误装 npm 上其他同名的 `occo` 包。
+也可以解压 `occo-0.2.0.tgz`，进入其中的 `package` 目录，无需构建。请使用本项目的源码或安装包，不要误装 npm 上其他同名的 `occo` 包。
 
 在插件目录（`packages/occo` 或解压后的 `package`）生成配置：
 

@@ -36,7 +36,7 @@ cd packages/occo
 bun run build
 ```
 
-Or extract `occo-0.1.0.tgz` and enter its `package` directory—no build needed. Use this project's source or archive, not the unrelated `occo` package on npm.
+Or extract `occo-0.2.0.tgz` and enter its `package` directory—no build needed. Use this project's source or archive, not the unrelated `occo` package on npm.
 
 From the plugin directory (`packages/occo` or the extracted `package`), generate its configuration:
 
