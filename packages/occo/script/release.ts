@@ -71,4 +71,5 @@ function check(name: string, text: string) {
   assert.ok(!/\b[a-z]:[\\/]+[\w.-]|\/(?:Users|home)\/[^/\s]+\//i.test(text), `Absolute user path in ${name}`)
   assert.ok(!/-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/.test(text), `Private key in ${name}`)
   assert.ok(!/\b(?:gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{40,}|AKIA[A-Z0-9]{16})\b/.test(text), `Credential in ${name}`)
+  assert.ok(!/https:\/\/registry\.(?!npmjs\.org)[\w.-]+/.test(text), `Non-default registry in ${name}`)
 }

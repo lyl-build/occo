@@ -42,7 +42,7 @@ bun run pack
 bun run release:source
 ```
 
-The first command builds the installable archive. The second checks its inventory, scans release contents for local paths and common credential formats, checks documentation copies, and creates a source archive using the explicit file list. Both archives are written to `artifacts/`. Review their contents before publishing; automated checks cannot identify every kind of sensitive information.
+The first command builds the installable archive. The second checks its inventory, scans release contents for local paths, common credential formats, and non-default package registries, checks documentation copies, and creates a source archive using the explicit file list. Both archives are written to `artifacts/`. Review their contents before publishing; automated checks cannot identify every kind of sensitive information.
 
 The package is intentionally marked private to prevent accidental registry publication. Source and archive distribution do not require an npm release. Retain the MIT license and third-party notices in every distribution.
 
