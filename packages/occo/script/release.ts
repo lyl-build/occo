@@ -6,6 +6,7 @@ import manifest from "../../../release-files.json"
 import pkg from "../package.json"
 
 const root = path.resolve(import.meta.dir, "../../..")
+const basename = pkg.name.replace(/^@/, "").replace("/", "-")
 const files = Object.fromEntries(
   await Promise.all(
     manifest.map(async (file) => {
@@ -37,7 +38,7 @@ for (const file of [
 ])
   assert.deepEqual(files[file], files[`packages/occo/${file}`], `Documentation copies differ: ${file}`)
 
-const archive = new Bun.Archive(await Bun.file(path.join(root, `artifacts/occo-${pkg.version}.tgz`)).arrayBuffer())
+const archive = new Bun.Archive(await Bun.file(path.join(root, `artifacts/${basename}-${pkg.version}.tgz`)).arrayBuffer())
 const packaged = await archive.files()
 assert.deepEqual([...packaged.keys()].sort(), ["package.json", ...pkg.files].map((file) => `package/${file}`).sort())
 for (const [name, file] of packaged) {
@@ -52,7 +53,7 @@ for (const [name, file] of packaged) {
 for (const [name, bytes] of Object.entries(files))
   if (!name.endsWith(".png")) check(name, new TextDecoder().decode(bytes))
 
-const output = path.join(root, `artifacts/occo-${pkg.version}-source.tgz`)
+const output = path.join(root, `artifacts/${basename}-${pkg.version}-source.tgz`)
 await Bun.Archive.write(
   output,
   Object.fromEntries(Object.entries(files).map(([name, bytes]) => [`occo/${name}`, bytes])),
@@ -62,7 +63,7 @@ const exported = await new Bun.Archive(await Bun.file(output).arrayBuffer()).fil
 assert.deepEqual([...exported.keys()].sort(), manifest.map((file) => `occo/${file}`).sort())
 for (const [name, file] of exported) assert.deepEqual(new Uint8Array(await file.arrayBuffer()), files[name.slice(5)])
 console.log(`Release checks passed: ${manifest.length} source files, ${packaged.size} package files.`)
-console.log(`Created artifacts/occo-${pkg.version}-source.tgz`)
+console.log(`Created artifacts/${basename}-${pkg.version}-source.tgz`)
 
 function check(name: string, text: string) {
   const normalized = text.replaceAll("\\\\", "/").replaceAll("\\", "/").toLowerCase()

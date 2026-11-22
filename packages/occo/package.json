@@ -1,10 +1,17 @@
 {
-  "name": "occo",
+  "name": "@lyl-build/occo",
   "version": "0.2.0",
-  "private": true,
   "description": "Find, save, and insert reusable prompts in OpenCode 2.3.0.",
   "type": "module",
   "license": "MIT",
+  "homepage": "https://github.com/lyl-build/occo#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lyl-build/occo.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lyl-build/occo/issues"
+  },
   "exports": {
     "./tui": "./dist/tui.js"
   },
@@ -61,5 +68,8 @@
     "typescript": "5.8.2",
     "prettier": "3.6.2",
     "@lydell/node-pty": "1.2.0-beta.10"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
