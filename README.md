@@ -28,7 +28,17 @@ Save prompts you reuse often. Next time, type the first few letters to autocompl
 
 For **OpenCode 2.3.0+**.
 
-With Bun 1.4.3, run from the repository root:
+Install directly with OpenCode:
+
+```sh
+opencode plugin add @lyl-build/occo
+```
+
+OpenCode installs the plugin and registers it in your configuration. Restart OpenCode, then type a few characters to see suggestions. `opencode plugin list` shows installed plugins, `opencode plugin update` upgrades to the latest release, and `opencode plugin remove @lyl-build/occo` uninstalls.
+
+### Offline or from source
+
+Installing the package with npm alone does not register the plugin—OpenCode never scans `node_modules`. For an offline or source install, build with Bun 1.4.3 from the repository root:
 
 ```sh
 bun install --frozen-lockfile
@@ -36,7 +46,7 @@ cd packages/occo
 bun run build
 ```
 
-Or install `@lyl-build/occo` from npm and use the installed directory—no build needed. Run `npm pack @lyl-build/occo` to produce `lyl-build-occo-0.2.1.tgz` with the same files for offline use.
+Run `npm pack @lyl-build/occo` instead to get `lyl-build-occo-0.2.1.tgz` with the same files—extract it and skip the build.
 
 From the plugin directory (`packages/occo`, `node_modules/@lyl-build/occo`, or the extracted `package`), generate its configuration:
 

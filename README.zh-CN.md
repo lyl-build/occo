@@ -28,7 +28,17 @@
 
 适用于 **OpenCode 2.3.0+**。
 
-安装 Bun 1.4.3 后，在仓库根目录运行：
+直接用 OpenCode 安装：
+
+```sh
+opencode plugin add @lyl-build/occo
+```
+
+OpenCode 会下载插件并写好配置。重启 OpenCode，输入几个字即可看到补全建议。`opencode plugin list` 查看已装插件，`opencode plugin update` 升级，`opencode plugin remove @lyl-build/occo` 卸载。
+
+### 离线或从源码安装
+
+只装 npm 包不会注册插件——OpenCode 不扫描任何 `node_modules`。离线或源码安装时，先在仓库根目录用 Bun 1.4.3 构建：
 
 ```sh
 bun install --frozen-lockfile
@@ -36,7 +46,7 @@ cd packages/occo
 bun run build
 ```
 
-也可以从 npm 安装 `@lyl-build/occo`，直接使用安装目录，无需构建。运行 `npm pack @lyl-build/occo` 可生成 `lyl-build-occo-0.2.1.tgz`，内容相同，适合离线使用。
+也可以用 `npm pack @lyl-build/occo` 生成 `lyl-build-occo-0.2.1.tgz`，内容相同，解压后跳过构建。
 
 在插件目录（`packages/occo`、`node_modules/@lyl-build/occo` 或解压后的 `package`）生成配置：
 
