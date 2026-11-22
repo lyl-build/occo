@@ -3,7 +3,8 @@ import type { JSX } from "@opentui/solid"
 import { createEffect, createMemo, onCleanup, onMount, untrack } from "solid-js"
 import { bindComposer, savedText, type Snapshot } from "./composer"
 import { createLibrary } from "./library"
-import { conversation, index } from "./search"
+import { prepare } from "./search"
+import { conversationHistory } from "./history"
 import { suggestions } from "./suggestions"
 import { libraryDialog } from "./library-dialog"
 import { copy } from "./copy"
@@ -76,30 +77,22 @@ export default Plugin.define({
       render(input) {
         let refresh = () => {}
         const composer = bindComposer(context, input, () => refresh())
-        const entries = createMemo(() =>
-          conversation(input.sessionID ? context.data.session.message.list(input.sessionID) : []),
-        )
-        const items = createMemo(() => index(entries(), library.state.prompts))
+        const history = conversationHistory(context, () => input.sessionID)
+        const items = createMemo(() => prepare(history.entries(), library.state.prompts))
         const menu = suggestions(
           context,
           composer,
           items,
           () => library.state.automaticSuggestions,
           (text) => libraryDialog(context, library, composer.current(true, true), insert, lifetime.signal).save(text),
+          history,
         )
         refresh = () => {
           if (composer.current(true)) active = { composer, menu }
           menu.refresh()
         }
         createEffect(() => {
-          const session = input.sessionID
-          if (session)
-            void context.data.session.message.sync(session).catch(() =>
-              context.ui.toast.show({
-                message: copy.historyFailed,
-                variant: "warning",
-              }),
-            )
+          input.sessionID
           input.mode
           untrack(refresh)
         })
