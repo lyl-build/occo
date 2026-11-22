@@ -14,15 +14,15 @@
 
 ## 复用对话
 
-输入之前回复里某句话的前两字，自动补全完整句子，不必回头翻找复制。
+输入之前回复中的几个字，即可从命中处补全到当前句子或表格单元格片段的末尾，不必回头翻找复制。代码从命中字符补全到代码块末尾。
 
-[![输入“先做这个：补一个”，找到当前对话中的回归测试建议。](docs/conversation-zh-framed.png)](docs/conversation-zh.png)
+[![输入“先做这个：补一个”，列出对话表格中的三条回归测试建议。](docs/conversation-zh-framed.png)](docs/conversation-zh.png)
 
 ## 复用提示词
 
 将经常复用的提示词保存起来，下次只需输入前两字，就能自动补全完整提示词。
 
-[![输入“审查”，找到已保存的代码审查提示词。](docs/library-zh-framed.png)](docs/library-zh.png)
+[![输入“审查”，列出三条已保存提示词，展示单行、多行和折叠预览。](docs/library-zh-framed.png)](docs/library-zh.png)
 
 ## 安装
 
@@ -48,7 +48,7 @@ bun -e "console.log(JSON.stringify({plugins:[require('node:url').pathToFileURL(p
 
 ## 使用
 
-输入三个英文字母或两个汉字，即可查找匹配建议。
+输入三个英文字母或两个汉字，即可查找匹配建议。💬 从命中处补全对话片段；⭐ 插入完整的已保存提示词。↑/↓ 可以浏览全部结果，候选区最多占八行，每条预览最多三行。
 
 | 操作 | 方式 |
 | --- | --- |
@@ -60,7 +60,7 @@ bun -e "console.log(JSON.stringify({plugins:[require('node:url').pathToFileURL(p
 
 **菜单打开时，Enter 用于插入。想发送草稿，请先按 Esc。** 保存提示词不用起标题；插入只需一步撤销，替换需要两步。
 
-提示词保存在本地。对话建议只检索当前会话最近十条已完成的消息，生成建议不调用模型。
+提示词保存在本地。对话建议检索当前会话中所有已完成的用户消息和助手回复，历史每加载一页就提供对应结果。
 
 [使用细节](docs/usage.zh-CN.md) · [参与贡献](CONTRIBUTING.md) · [测试与限制](VALIDATION.md)
 

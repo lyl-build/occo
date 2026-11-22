@@ -22,8 +22,12 @@ Work on a short-lived branch from `main`. A pull request should explain the user
 
 - `composer.ts` is the only production module that writes to the native prompt. Preserve native undo, attachment marks, and stale-draft protection.
 - `library.ts` is the only production module that changes persistent prompt-library state. Keep conflict checks and failure recovery intact.
-- `search.ts` extracts and ranks text; query evaluation stays in memory.
-- `suggestions.tsx` and `library-dialog.tsx` own the interfaces; `tui.tsx` registers and disposes them.
+- `extract.ts` walks Marked nodes into plain strings for readable prose, table cells, code, and literal HTML. Display metadata does not belong in extraction.
+- `search.ts` prepares Unicode search projections, ranks matches, and creates completion edits; query evaluation stays in memory. Completion edits are the single source of preview and insertion text.
+- `history.ts` loads all message pages for the active session and combines them with live transcript updates, owns loading/failure/retry state, and cancels outdated requests.
+- `suggestions.tsx` owns display-row folding, timestamps, its eight-row viewport, theme-derived stripes and the one-row footer. The viewport measures preview heights only. Symmetric side markers use existing padding and close around the visible previews; empty states, filler and footer have no markers. The pieces belong to their candidate rows so mouse selection works on both sides. Alternating stripes adjust the dialog background's HSL lightness by +8 percentage points in dark mode or -8 in light mode, clamped to 0–100%, preserving hue, saturation and alpha. The host's `themeMode` determines the direction; text colors do not affect the stripe. The footer layout is pure; rendering owns colors and action handlers. `library-dialog.tsx` owns library interfaces; `tui.tsx` registers and disposes them.
+
+Candidate rows place the left marker, two-column emoji and preview text directly next to each other. Only the timestamp has a one-column left margin; footer and empty-state padding are independent.
 
 Prefer inferred types, early returns, and small functions with clear responsibilities. Avoid `any`, unnecessary destructuring, and single-use abstractions. Comment on non-obvious host constraints rather than restating code. Test the implementation using real OpenTUI components where practical.
 
@@ -44,17 +48,17 @@ The package is intentionally marked private to prevent accidental registry publi
 
 ## Refresh the README screenshots
 
-On Windows, open a Windows Terminal PowerShell window at the size and zoom you want to capture. Use one pane. With official OpenCode 2.3.0 on PATH (or its executable path in `OPENCODE_BIN`), run from `packages/occo`:
+On Windows, with Windows Terminal and its PowerShell profile available, and official OpenCode 2.3.0 on PATH (or its executable path in `OPENCODE_BIN`), run from `packages/occo`:
 
 ```powershell
 bun run screenshots
 ```
 
-The command opens a separate Windows Terminal window with `pwsh.exe`. It uses the `PowerShell` profile by default; set `OCCO_TERMINAL_PROFILE` to use another profile. The new window must match the reference window's font, cell dimensions, DPI, and terminal viewport size. A mismatch stops the capture instead of resizing the image.
+The command opens a separate Windows Terminal window with `pwsh.exe`. It uses the `PowerShell` profile by default; set `OCCO_TERMINAL_PROFILE` to use another profile. The window keeps its default startup size, font and zoom; the script does not resize, maximize or position it, and needs no reference window. It records the actual viewport and pixel dimensions. Subsequent inputs and captures must match that recorded layout, so all scenes in one run use the same size. A mismatch stops capture rather than resizing the image.
 
-Keep the demonstration window visible and unobstructed while the command runs. The capture reads the entire terminal content area directly from the screen, excluding Windows Terminal's title bar and the taskbar. PNG files retain the original pixel dimensions. Text is not redrawn, and the OpenCode layout is not cropped or rearranged.
+Keep the demonstration window in the foreground while the command types into it. Windows native window capture reads the complete terminal content even when the taskbar overlaps the window. Only native window chrome, such as the title bar, is excluded. PNG files retain the original pixel dimensions. Text is not redrawn, and the OpenCode layout is not cropped or rearranged.
 
-Each run uses a fresh configuration and data directory under `tmp/occo-readme-*`. It creates English and Chinese examples for conversation reuse and saved prompts, checks automatic menu opening and insertion without sending, then copies the four images to both documentation directories. It types only into its own window, does not press F12 or change the clipboard, and makes no model calls. The window closes when the run ends. Normal host tests keep their existing fixtures and directories.
+Each run uses a fresh configuration and data directory under `tmp/occo-readme-*`. It creates English and Chinese examples with three suggestions each: regression tests from a conversation table, and saved prompts with one-, two- and folded three-row previews. It checks source visibility, automatic menu opening and insertion without sending, then copies the four images to both documentation directories. It types only into its own window and does not press F12 or change the clipboard. The window closes when the run ends. Normal host tests keep their existing fixtures and directories.
 
 Review all four images before packaging, including the full interface and any visible paths. Runtime files and window measurements stay in the temporary directory.
 
@@ -62,6 +66,8 @@ Review all four images before packaging, including the full interface and any vi
 
 `bun run screenshots` also creates framed display copies. To refresh only the frames without opening a terminal, run `bun run screenshots:frame` from `packages/occo`.
 
-The frame adds a transparent margin, a dark rounded shell, a thin border, and a soft shadow. It copies the original screenshot at its native size without clipping its corners. The generator checks every decoded pixel in the copied region and verifies that the shadow does not touch the canvas edges. To check existing display copies without rewriting them, run `powershell -NoProfile -File script/frame-screenshots.ps1 -CheckOnly`.
+The frame uses an 80px transparent margin, 10px padding, a 24px corner radius and a `#15181D` shell. A 2px white outline at 15% opacity and a 1px black inner line at 30% opacity define its edges. Two black shadows provide depth: a 16% ambient shadow offset 16px down with three 14px-radius box-blur passes, and a 12% contact shadow offset 4px down with three 3px-radius passes. Each pass blurs both axes. All measurements refer to the original image pixels.
+
+The generator copies the original screenshot at its native size without clipping its corners. It checks every decoded pixel in the copied region, shadow falloff and transparent canvas edges. Review the results on light and dark backgrounds at full size and around 900px display width. To check existing display copies without rewriting them, run `powershell -NoProfile -File script/frame-screenshots.ps1 -CheckOnly`.
 
 README images use the `*-framed.png` files and link to the original PNGs. Keep both versions in the source and installable archives.

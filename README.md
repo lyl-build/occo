@@ -14,15 +14,15 @@ Tired of retyping the same prompts?
 
 ## Reuse the conversation
 
-Type the first few letters of a sentence from an earlier reply to autocomplete it, without scrolling back to copy.
+Type a few characters from an earlier reply—even inside a Markdown table—to continue from the match to the end of that sentence or cell fragment. Code completes from the matched character to the end of its block.
 
-[![Typing “Start with this: Add” finds a regression-test suggestion from the current conversation.](docs/conversation-en-framed.png)](docs/conversation-en.png)
+[![Typing “Start with this: Add” offers three regression-test suggestions from the conversation table.](docs/conversation-en-framed.png)](docs/conversation-en.png)
 
 ## Reuse your prompts
 
 Save prompts you reuse often. Next time, type the first few letters to autocomplete the full prompt.
 
-[![Typing “review” finds a saved code-review prompt.](docs/library-en-framed.png)](docs/library-en.png)
+[![Typing “review” offers three saved prompts with single-line, multiline and folded previews.](docs/library-en-framed.png)](docs/library-en.png)
 
 ## Install
 
@@ -48,7 +48,7 @@ Add the file URL to `plugins` in your OpenCode configuration environment's `cli.
 
 ## Use
 
-Type three English letters or two Chinese characters to get matching suggestions.
+Type three English letters or two Chinese characters to get matching suggestions. 💬 completes conversation text from the match; ⭐ inserts a saved prompt in full. Use ↑/↓ to browse every match, within an eight-row viewport, with up to three preview rows per match.
 
 | Action | How |
 | --- | --- |
@@ -60,7 +60,7 @@ Type three English letters or two Chinese characters to get matching suggestions
 
 **Enter inserts while the menu is open. Press Esc first if you want to send.** Saved prompts need no title. Insertion takes one undo step; replacement takes two.
 
-Prompts are stored locally. Conversation suggestions use the current session's last ten completed messages. Generating suggestions makes no model calls.
+Prompts are stored locally. Conversation suggestions use all completed user and assistant messages in the current session, appearing as history pages load.
 
 [Usage details](docs/usage.md) · [Contributing](CONTRIBUTING.md) · [Tests and limitations](VALIDATION.md)
 
