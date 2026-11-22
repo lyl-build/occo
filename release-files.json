@@ -2,6 +2,7 @@
   ".editorconfig",
   ".gitattributes",
   ".github/workflows/check.yml",
+  ".github/workflows/release.yml",
   ".gitignore",
   "CONTRIBUTING.md",
   "LICENSE",

@@ -46,6 +46,16 @@ The first command builds the installable archive. The second checks its inventor
 
 Retain the MIT license and third-party notices in every distribution.
 
+## Releasing
+
+Publishing to npm is automated by the `Release` GitHub Actions workflow, which runs when a tag matching `v*` is pushed:
+
+1. Update `version` in `packages/occo/package.json` and the archive name in both README languages, run the checks above plus `bun run pack` and `bun run release:source`, and fast-forward `main`.
+2. Tag the release commit as `vX.Y.Z` matching the package version and push the tag.
+3. CI reruns the gates on the tagged commit, verifies the tag matches the package version, and publishes to npm with provenance using the `NPM_TOKEN` repository secret (a granular npm access token).
+
+The archives in `artifacts/` are local validation copies; npm receives a fresh pack built by CI from the tagged commit.
+
 ## Refresh the README screenshots
 
 On Windows, with Windows Terminal and its PowerShell profile available, and official OpenCode 2.3.0 on PATH (or its executable path in `OPENCODE_BIN`), run from `packages/occo`:
