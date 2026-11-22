@@ -36,7 +36,7 @@ cd packages/occo
 bun run build
 ```
 
-Or install `@lyl-build/occo` from npm and use the installed directory—no build needed. Run `npm pack @lyl-build/occo` to produce `lyl-build-occo-0.2.0.tgz` with the same files for offline use.
+Or install `@lyl-build/occo` from npm and use the installed directory—no build needed. Run `npm pack @lyl-build/occo` to produce `lyl-build-occo-0.2.1.tgz` with the same files for offline use.
 
 From the plugin directory (`packages/occo`, `node_modules/@lyl-build/occo`, or the extracted `package`), generate its configuration:
 

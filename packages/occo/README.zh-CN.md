@@ -36,7 +36,7 @@ cd packages/occo
 bun run build
 ```
 
-也可以从 npm 安装 `@lyl-build/occo`，直接使用安装目录，无需构建。运行 `npm pack @lyl-build/occo` 可生成 `lyl-build-occo-0.2.0.tgz`，内容相同，适合离线使用。
+也可以从 npm 安装 `@lyl-build/occo`，直接使用安装目录，无需构建。运行 `npm pack @lyl-build/occo` 可生成 `lyl-build-occo-0.2.1.tgz`，内容相同，适合离线使用。
 
 在插件目录（`packages/occo`、`node_modules/@lyl-build/occo` 或解压后的 `package`）生成配置：
 
