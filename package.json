@@ -1,0 +1,11 @@
+{
+  "name": "occo-workspace",
+  "private": true,
+  "type": "module",
+  "packageManager": "bun@1.4.3",
+  "workspaces": ["packages/occo"],
+  "scripts": {
+    "build": "bun run --cwd packages/occo build",
+    "test": "echo Run bun test from packages/occo && exit 1"
+  }
+}

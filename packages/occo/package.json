@@ -1,0 +1,64 @@
+{
+  "name": "occo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Find, save, and insert reusable prompts in OpenCode 2.3.0.",
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    "./tui": "./dist/tui.js"
+  },
+  "files": [
+    "dist/tui.js",
+    "dist/tui.js.map",
+    "README.md",
+    "CONTRIBUTING.md",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md",
+    "VALIDATION.md",
+    "README.zh-CN.md",
+    "docs/conversation-en.png",
+    "docs/conversation-zh.png",
+    "docs/library-en.png",
+    "docs/library-zh.png",
+    "docs/usage.md",
+    "docs/usage.zh-CN.md",
+    "docs/conversation-en-framed.png",
+    "docs/conversation-zh-framed.png",
+    "docs/library-en-framed.png",
+    "docs/library-zh-framed.png",
+    "docs/brand/header-dark.svg",
+    "docs/brand/header-light.svg"
+  ],
+  "scripts": {
+    "build": "bun script/build.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "gate": "bun script/build.ts --gate",
+    "test:host": "bun run build && bun script/build.ts --integration && node script/integration.cjs",
+    "screenshots": "bun run build && bun script/build.ts --integration && node script/integration.cjs --screenshots && bun run screenshots:frame",
+    "pack": "bun run build && bun pm pack --destination ../../artifacts",
+    "release:source": "bun script/release.ts",
+    "screenshots:frame": "powershell -NoProfile -File script/frame-screenshots.ps1"
+  },
+  "dependencies": {
+    "fuzzysort": "3.1.0",
+    "marked": "17.0.1"
+  },
+  "peerDependencies": {
+    "@opencode/plugin": "2.3.0",
+    "@opentui/core": "0.8.4",
+    "@opentui/solid": "0.8.4",
+    "solid-js": "1.9.17"
+  },
+  "devDependencies": {
+    "@opencode/plugin": "2.3.0",
+    "@opentui/core": "0.8.4",
+    "@opentui/solid": "0.8.4",
+    "solid-js": "1.9.17",
+    "@types/bun": "1.4.3",
+    "typescript": "5.8.2",
+    "prettier": "3.6.2",
+    "@lydell/node-pty": "1.2.0-beta.10"
+  }
+}
